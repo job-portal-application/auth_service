@@ -8,4 +8,4 @@ RUN npm ci
 
 COPY . .
 
-CMD ["npm", "test"]
+CMD ["npm", "run", "coverage"]
