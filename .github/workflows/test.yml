@@ -1,24 +1,28 @@
-name: Docker Jest Tests
-
 on:
   push:
     branches:
       - main
-
   pull_request:
     branches:
       - main
 
 jobs:
-  docker-test:
+  sonarqube:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Build Docker Image
         run: docker build -t auth-service .
 
-      - name: Run Jest Tests
-        run: docker run --rm auth-service
+      - name: Run Jest Tests inside Docker
+        run: docker run --rm -v $PWD/coverage:/app/coverage auth-service yarn jest --coverage
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
