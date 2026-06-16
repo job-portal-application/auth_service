@@ -23,6 +23,4 @@ jobs:
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v7
         env:
-          SONAR_TOKEN: 7d8f3d55a22eeca9127982cdc065b2da37089fe9
-          SONAR_PROJECT_KEY: job-portal-application_auth_service
-          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
+          SONAR_TOKEN: c7e703ed6f5ee5fb9e9c4cb2e428064d8214dba9
