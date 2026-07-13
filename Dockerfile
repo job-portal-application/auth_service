@@ -8,4 +8,8 @@ RUN npm ci
 
 COPY . .
 
-CMD ["npm", "run", "coverage"]
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
