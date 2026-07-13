@@ -1,3 +1,5 @@
+name: Run all tests
+
 on:
   push:
     branches:
@@ -21,6 +23,7 @@ jobs:
         run: docker run --rm -v $PWD/coverage:/app/coverage auth-service npm run coverage
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7
+        uses: SonarSource/sonarqube-scan-action@v4
         env:
-          SONAR_TOKEN: c7e703ed6f5ee5fb9e9c4cb2e428064d8214dba9
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          
