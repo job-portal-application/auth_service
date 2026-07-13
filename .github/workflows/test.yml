@@ -16,14 +16,63 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Pull Kafka Docker Image
+        run: docker pull apache/kafka:4.1.0
+
+      - name: Start Kafka
+        run: |
+            docker run -d --name kafka \
+              -p 9092:9092 \
+              -e KAFKA_NODE_ID=1 \
+              -e KAFKA_PROCESS_ROLES=broker,controller \
+              -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT \
+              -e KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 \
+              -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+              -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER \
+              -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 \
+              -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+              -e KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0 \
+              apache/kafka:4.1.0
+
+      - name: Wait for Kafka to start
+        run: |
+          echo "Waiting for Kafka to start..."
+          sleep 20
+
       - name: Build Docker Image
         run: docker build -t auth-service .
 
       - name: Run Jest Tests inside Docker
-        run: docker run --rm -v $PWD/coverage:/app/coverage auth-service npm run coverage
+        env:
+          PORT: ${{ secrets.PORT }}
+          DB_URL: ${{ secrets.DB_URL }}
+          UPLOAD_SERVICE_URL: ${{ secrets.UPLOAD_SERVICE_URL }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_RESET_SECRET_KEY: ${{ secrets.JWT_RESET_SECRET_KEY }}
+          KAFKA_BROKER: localhost:9092
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+        run: |
+          docker run --rm \
+          -e PORT \
+          -e DB_URL \
+          -e UPLOAD_SERVICE_URL \
+          -e JWT_SECRET_KEY \
+          -e JWT_RESET_SECRET_KEY \
+          -e KAFKA_BROKER \
+          -e FRONTEND_URL \
+          -e REDIS_URL \
+          -v $PWD/coverage:/app/coverage \
+          auth-service npm run coverage
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          
+        
+      - name: Stop Kafka
+        if: always()
+        run: |
+          echo "Stopping Kafka..."
+          docker stop kafka || true
+          docker rm kafka || true
