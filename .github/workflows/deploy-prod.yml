@@ -3,9 +3,11 @@ name: Production
 on:
     workflow_run:
         workflows:
-            - Development
+            - CI
         types:
             - completed
+        branches:
+            - main
 
 jobs:
     deploy:
