@@ -3,17 +3,23 @@ name: CI
 on:
   push:
     branches:
+      -development
       - main
   pull_request:
     branches:
+      - development
       - main
 
 jobs:
   sonarqube:
     runs-on: ubuntu-latest
-    environment: development
+    
+    permissions:
+      contents: read
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
