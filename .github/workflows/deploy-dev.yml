@@ -2,17 +2,12 @@
 name: Development
 
 on:
-    workflow_run:
-        workflows:
-            - CI
-        types:
-            - completed
-        branches:
-            - development
+    push:
+      branches:
+        - development
 
 jobs:
     deploy:
-        if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'development' }}
         runs-on: ubuntu-latest
         environment: development
 

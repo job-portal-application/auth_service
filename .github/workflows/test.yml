@@ -1,9 +1,6 @@
-name: CI
+name: Run all tests
 
 on:
-  push:
-    branches:
-      -"**"
   pull_request:
     branches:
       - development
@@ -12,10 +9,7 @@ on:
 jobs:
   test:
     name: SonarQube
-    runs-on: ubuntu-latest
-    
-    permissions:
-      contents: read
+    runs-on: ubuntu-lates
     
     steps:
       - name: Checkout repository
