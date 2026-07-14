@@ -1,15 +1,18 @@
+# AWS credentials will b e provided later here
 name: Production
 
 on:
     workflow_run:
         workflows:
-            - Development
+            - CI
         types:
             - completed
+        branches:
+            - main
 
 jobs:
     deploy:
-        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
         runs-on: ubuntu-latest
         environment: production
 
