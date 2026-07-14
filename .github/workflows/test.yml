@@ -3,17 +3,23 @@ name: CI
 on:
   push:
     branches:
-      - main
+      -"**"
   pull_request:
     branches:
+      - development
       - main
 
 jobs:
-  sonarqube:
+  test:
+    name: SonarQube
     runs-on: ubuntu-latest
-    environment: development
+    
+    permissions:
+      contents: read
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -45,13 +51,13 @@ jobs:
 
       - name: Run Jest Tests inside Docker
         env:
-          PORT: ${{vars.PORT }}
+          PORT: ${{secrets.PORT }}
           DB_URL: ${{ secrets.DB_URL }}
-          UPLOAD_SERVICE_URL: ${{ vars.UPLOAD_SERVICE_URL }}
+          UPLOAD_SERVICE_URL: ${{ secrets.UPLOAD_SERVICE_URL }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           JWT_RESET_SECRET_KEY: ${{ secrets.JWT_RESET_SECRET_KEY }}
-          KAFKA_BROKER: ${{ vars.KAFKA_BROKER }}
-          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+          KAFKA_BROKER: ${{ secrets.KAFKA_BROKER }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
         run: |
           docker run --rm \
