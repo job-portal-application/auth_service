@@ -40,11 +40,11 @@ jobs:
 
             - name: Tag docker image
               run: |
-                docker tag auth_service:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/auth_service:latest
+                docker tag auth_service:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{secrets.ECR_REPOSITORY }}:latest
 
             - name: Push docker image to ECR
               run: |
-                docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/auth_service:latest
+                docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{secrets.ECR_REPOSITORY }}:latest
 
             - name: Deploy to ECS
               run: |
