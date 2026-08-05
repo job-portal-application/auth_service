@@ -1,54 +1,61 @@
-# AWS credentials will be provided later here
-name: Development
+name: Deploy Development
 
 on:
-    workflow_run:
-        workflows:
-            - CI
-        types:
-            - completed
-        branches:
-            - development
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
 
 jobs:
-    deploy:
-        if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'development' }}
-        runs-on: ubuntu-latest
-        environment: development
+  deploy:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'development'
 
-        permissions:
-            contents: read
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+    permissions:
+      id-token: write
+      contents: read
 
-            - name: Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  aws-region: ${{ secrets.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Login to Amazon ECR
-              id: login-ecr
-              uses: aws-actions/amazon-ecr-login@v2
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
 
-            - name: Build docker image
-              run: |
-                docker build -t auth_service .
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
 
-            - name: Tag docker image
-              run: |
-                docker tag auth_service:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{secrets.ECR_REPOSITORY }}:latest
+      - name: Build Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: auth-service
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-            - name: Push docker image to ECR
-              run: |
-                docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{secrets.ECR_REPOSITORY }}:latest
+      - name: Download Task Definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition auth-service-dev-task \
+            --query taskDefinition > task-definition.json
 
-            - name: Deploy to ECS
-              run: |
-                  aws ecs update-service \
-                  --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
-                  --service ${{ secrets.ECS_SERVICE_NAME }} \
-                  --force-new-deployment
+      - uses: aws-actions/amazon-ecs-render-task-definition@v1
+        id: task-def
+        with:
+          task-definition: task-definition.json
+          container-name: auth-service
+          image: ${{ steps.login-ecr.outputs.registry }}/auth-service:latest
+
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: auth-service-dev-task-service
+          cluster: dev-cluster
+          wait-for-service-stability: true
