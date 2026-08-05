@@ -10,6 +10,7 @@ dotenv.config();
 
 const app = express();
 
+// CORS configuration
 const buildCorsOptions = () => {
     const allowedOrigins = (process.env.FRONTEND_URL || "")
         .split(",")
