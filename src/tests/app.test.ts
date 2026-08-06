@@ -1,7 +1,8 @@
 import { jest, describe, beforeEach, afterEach, expect, it } from '@jest/globals';
 
 const mockUse = jest.fn();
-const mockExpressApp = { use: mockUse };
+const mockGet = jest.fn();
+const mockExpressApp = { use: mockUse, get: mockGet };
 const mockExpress = Object.assign(jest.fn(() => mockExpressApp), {
     json: jest.fn(() => 'json-middleware'),
     urlencoded: jest.fn(() => 'urlencoded-middleware'),
