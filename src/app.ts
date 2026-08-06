@@ -10,6 +10,14 @@ dotenv.config();
 
 const app = express();
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: "UP",
+    service: "Upload Service",
+    timestamp: new Date().toISOString()
+  });
+});
+
 // CORS configuration
 const buildCorsOptions = () => {
     const allowedOrigins = (process.env.FRONTEND_URL || "")
