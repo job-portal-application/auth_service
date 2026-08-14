@@ -1,4 +1,4 @@
-# Development deployment workflow
+# Development deployment workflow for Auth service
 name: Development
 
 on:
